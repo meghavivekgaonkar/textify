@@ -1,8 +1,10 @@
 package com.textify.me.service;
 
 import java.time.Instant;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -35,9 +37,27 @@ public class JobService {
 		this.gcsService = gcsService;
 		this.pubSubPublisherService = pubSubPublisherService;
 	}
-    // Allowed MIME types
-	private static final Set<String> ALLOWED_MIME_TYPES = Set.of("image/jpeg", "image/png", "image/gif", "image/bmp",
-			"image/webp", "application/pdf");
+    // Allowed MIME types]
+	 private static final Map<String, String> FILE_EXTENSION_TO_CATEGORY_MAP;
+
+    // Static initializer to populate the map at class loading time.
+    static {
+        Map<String, String> aMap = new HashMap<>();
+
+        // Documents (originally tied to application/pdf)
+        aMap.put("application/pdf", "pdf");
+
+        // Images (originally tied to various image MIME types)
+        aMap.put("image/jpg", "image");
+        aMap.put("image/jpeg", "image");
+        aMap.put("image/png", "image");
+        aMap.put("image/gif", "image");
+        aMap.put("image/bmp", "image");
+        aMap.put("image/webp", "image");
+
+        // Any extension not in this map is considered an unsupported file type.
+        FILE_EXTENSION_TO_CATEGORY_MAP = Collections.unmodifiableMap(aMap);
+    }
 
 	@Transactional
 	public UploadResponse initiateFileUpload(MultipartFile file) {
@@ -47,7 +67,7 @@ public class JobService {
 			throw new InvalidFileException("Uploaded file is empty.");
 		}
 		String mimeType = file.getContentType();
-		if (mimeType == null || !ALLOWED_MIME_TYPES.contains(mimeType)) {
+		if (mimeType == null || !FILE_EXTENSION_TO_CATEGORY_MAP.containsKey(mimeType)) {
 			throw new InvalidFileException("Unsupported file type: " + (mimeType != null ? mimeType : "unknown")
 					+ ". Only images (JPEG, PNG, GIF, BMP, WebP) and PDFs are allowed.");
 		}
@@ -67,7 +87,7 @@ public class JobService {
 		job.setOriginal_filename(originalFilename);
 		job.setOriginal_gcs_path(originalGcsPath);
 		job.setStatus("UPLOADED"); // Initial status
-		job.setFileType(determineFileTypeCategory(mimeType)); // 'image' or 'pdf'
+		job.setFileType(FILE_EXTENSION_TO_CATEGORY_MAP.get(mimeType)); // 'image' or 'pdf'
 		job.setMimeType(mimeType);
 		job.setCreatedAt(Instant.now());
 		job.setUpdatedAt(Instant.now());
@@ -80,11 +100,6 @@ public class JobService {
 		pubSubPublisherService.publishProcessingRequest(jobId, originalGcsPath);
 
 		return new UploadResponse(jobId, "UPLOADED", "File received and processing initiated.");
-	}
-
-	private String determineFileTypeCategory(String mimeType) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	// Helper to extract file extension (e.g., "pdf" from "document.pdf")

@@ -29,10 +29,7 @@ public class JobController {
 
     @PostMapping("/upload")
     public ResponseEntity<UploadResponse> uploadFile(@RequestParam("file") MultipartFile file) {
-        // Delegate to JobService for business logic and asynchronous initiation
         UploadResponse response = jobService.initiateFileUpload(file);
-        // Return 202 Accepted, indicating that the request has been accepted for processing,
-        // but the processing is not yet complete.
         return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
     }
 
