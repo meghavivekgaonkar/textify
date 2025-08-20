@@ -79,7 +79,7 @@ The `frontend` provides a clean, responsive user interface for your application.
 
 1. Clone this repository.
 
-2. Set up your Google Cloud project with Firestore, Pub/Sub, and Google Cloud Storage.
+2. Set up your Google Cloud project with Pub/Sub, and Google Cloud Storage.
 
 3. Configure your environment variables with the necessary credentials and project IDs for each service.
 
