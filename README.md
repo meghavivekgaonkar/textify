@@ -8,7 +8,7 @@ The project is divided into three main components:
 
 * **`api-service`**: A Spring Boot application that exposes a REST API for clients to upload files and create processing jobs.
 
-* **`worker-service`**: A Spring Boot application that subscribes to a Pub/Sub topic, processes jobs, and updates their status in Firestore.
+* **`worker-service`**: A Spring Boot application that subscribes to a Pub/Sub topic, processes jobs, and updates their status in MySQL.
 
 * **`frontend`**: A React application that provides the user interface for uploading files and viewing job statuses in real-time.
 
