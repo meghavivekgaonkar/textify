@@ -20,7 +20,7 @@ The `api-service` acts as the entry point for all client requests. Its primary r
 
 * Saving files to a storage service (e.g., Google Cloud Storage).
 
-* Creating a new job entry in the Firestore database.
+* Creating a new job entry in the MySQL database.
 
 * Publishing a message to a Pub/Sub topic to signal the `worker-service` that a new job is ready for processing.
 
@@ -56,8 +56,6 @@ The `worker-service` is an asynchronous microservice that handles the heavy lift
 The `frontend` provides a clean, responsive user interface for your application.
 
 * Users can upload files through a simple form.
-
-* It connects to Firestore to display a real-time list of all processing jobs for the authenticated user.
 
 * Job statuses (PENDING, IN_PROGRESS, COMPLETED, FAILED) are automatically updated on the UI as the `worker-service` changes them in the database.
 
