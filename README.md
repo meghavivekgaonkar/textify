@@ -42,13 +42,13 @@ The `worker-service` is an asynchronous microservice that handles the heavy lift
 
 * It performs the file processing task (e.g., text extraction, data analysis).
 
-* It updates the job's status in the Firestore database to `IN_PROGRESS`, then to `COMPLETED` or `FAILED`.
+* It updates the job's status in the MySQL database to `IN_PROGRESS`, then to `COMPLETED` or `FAILED`.
 
 **Running the Worker Service**
 
 1. Navigate to the `worker-service` directory.
 
-2. Ensure you have your environment variables for Firebase and Pub/Sub configured.
+2. Ensure you have your environment variables for Pub/Sub configured.
 
 3. Run the application using Maven: mvn spring-boot:run
 ## Frontend React App
