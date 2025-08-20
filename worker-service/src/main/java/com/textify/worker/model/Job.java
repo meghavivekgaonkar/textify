@@ -17,6 +17,9 @@ import lombok.NoArgsConstructor;
 public class Job {
 	@Id
 	String id;
+
+	@Column
+	String userId; // New field to associate job with a user
 	
 	@Column
 	String original_filename;

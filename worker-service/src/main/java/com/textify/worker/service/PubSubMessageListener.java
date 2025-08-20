@@ -34,7 +34,7 @@ public class PubSubMessageListener {
             ProcessingRequestPayload request = objectMapper.readValue(payload, ProcessingRequestPayload.class);
 
             // Delegate the actual heavy lifting to the WorkerProcessingService
-            workerProcessingService.processJobWithRetry(request.jobId);
+            workerProcessingService.processJobWithRetry(request.jobId, request.userId, request.originalGcsPath);
 
             // Acknowledge the message if processing was successful
             message.ack();
@@ -62,15 +62,17 @@ public class PubSubMessageListener {
     // Must match the payload structure from PubSubPublisherService in api-service
     private static class ProcessingRequestPayload {
         public String jobId;
+        public String userId; 
         public String originalGcsPath;
 
         // Required by Jackson for deserialization
         public ProcessingRequestPayload() {
         }
 
-        public ProcessingRequestPayload(String jobId, String originalGcsPath) {
+        public ProcessingRequestPayload(String jobId, String originalGcsPath, String userId) {
             this.jobId = jobId;
             this.originalGcsPath = originalGcsPath;
+            this.userId = userId;
         }
     }
 }

@@ -60,7 +60,7 @@ public class JobService {
     }
 
 	@Transactional
-	public UploadResponse initiateFileUpload(MultipartFile file) {
+	public UploadResponse initiateFileUpload(MultipartFile file, String userId) {
 
 		// --- 1. Basic File Validation ---
 		if (file.isEmpty()) {
@@ -84,6 +84,7 @@ public class JobService {
 		// --- 4. Persist Job Metadata to Cloud SQL ---
 		Job job = new Job();
 		job.setId(jobId);
+		job.setUserId(userId); // Associate job with user
 		job.setOriginal_filename(originalFilename);
 		job.setOriginal_gcs_path(originalGcsPath);
 		job.setStatus("UPLOADED"); // Initial status
@@ -97,7 +98,7 @@ public class JobService {
 
 		// --- 5. Publish Message to Pub/Sub ---
 		// The worker service will consume this message to start processing
-		pubSubPublisherService.publishProcessingRequest(jobId, originalGcsPath);
+		pubSubPublisherService.publishProcessingRequest(jobId, originalGcsPath, userId);
 
 		return new UploadResponse(jobId, "UPLOADED", "File received and processing initiated.");
 	}
@@ -124,27 +125,12 @@ public class JobService {
 	}
 
 	private JobStatusResponse mapJobToJobStatusResponse(Job job) {
-		return new JobStatusResponse(job.getId(), job.getStatus(), job.getOriginal_filename(), job.getError_message(),
+		return new JobStatusResponse(job.getId(),job.getUserId(), job.getStatus(), job.getOriginal_filename(), job.getError_message(),
 				job.getCreatedAt(),
 				// Only provide download URL if job is completed and path exists
 				job.getStatus().equals("COMPLETED") && job.getProcessed_gcs_path() != null
 						? gcsService.getPublicDownloadUrl(job.getProcessed_gcs_path())
 						: null);
-	}
-
-	@Transactional(readOnly = true)
-	public String getDownloadUrl(String jobId) {
-		Job job = jobRepository.findById(jobId)
-				.orElseThrow(() -> new JobNotFoundException("Job with ID " + jobId + " not found."));
-
-		if (!"COMPLETED".equals(job.getStatus()) || job.getProcessed_gcs_path() == null) {
-			// Throw a more specific exception if the file isn't ready
-			throw new InvalidFileException(
-					"Job with ID " + jobId + " is not yet completed or processed file is not available.");
-		}
-
-		// Use GcsService to generate the public download URL
-		return gcsService.getPublicDownloadUrl(job.getProcessed_gcs_path());
 	}
 	
 	@Transactional(readOnly = true)
@@ -160,5 +146,26 @@ public class JobService {
                 .map(this::mapJobToJobStatusResponse) // Reuse the mapping helper
                 .collect(Collectors.toList());
     }
+	@Transactional(readOnly = true)
+    public UploadResponse getJobStatusByUserId(String userId) {
+		
+		Job job = jobRepository.findTopByUserIdOrderByCreatedAtDesc(userId);	
+		UploadResponse response = new UploadResponse(job.getId(), job.getStatus(), "Job status retrieved successfully.");
+		return response;
+	}
+	@Transactional(readOnly = true)
+	public String getDownloadUrl(String jobId) {
+		Job job = jobRepository.findById(jobId)
+				.orElseThrow(() -> new JobNotFoundException("Job with ID " + jobId + " not found."));
+
+		if (!"COMPLETED".equals(job.getStatus()) || job.getProcessed_gcs_path() == null) {
+			// Throw a more specific exception if the file isn't ready
+			throw new InvalidFileException(
+					"Job with ID " + jobId + " is not yet completed or processed file is not available.");
+		}
+
+		// Use GcsService to generate the public download URL
+		return gcsService.getPublicDownloadUrl(job.getProcessed_gcs_path());
+	}
 
 }

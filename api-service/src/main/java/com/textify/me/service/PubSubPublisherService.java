@@ -69,10 +69,12 @@ public class PubSubPublisherService {
     private static class PublishingPayload {
         public String jobId;
         public String originalGcsPath;
+        public String userId;
 
-        public PublishingPayload(String jobId, String originalGcsPath) {
+        public PublishingPayload(String jobId, String originalGcsPath,String userId) {
             this.jobId = jobId;
             this.originalGcsPath = originalGcsPath;
+            this.userId = userId;
         }
     }
 
@@ -83,7 +85,7 @@ public class PubSubPublisherService {
      * @param jobId The ID of the job to process.
      * @param originalGcsPath The GCS path of the original file.
      */
-    public void publishProcessingRequest(String jobId, String originalGcsPath) {
+    public void publishProcessingRequest(String jobId, String originalGcsPath, String userId) {
         // Defensive check: ensure the publisher was initialized successfully
         if (publisher == null) {
             logger.error("Pub/Sub Publisher is not initialized. Cannot publish message for job ID: {}. Application startup likely failed.", jobId);
@@ -92,7 +94,7 @@ public class PubSubPublisherService {
 
         try {
             // Create the payload object and serialize it to JSON
-            PublishingPayload payload = new PublishingPayload(jobId, originalGcsPath);
+            PublishingPayload payload = new PublishingPayload(jobId, originalGcsPath, userId);
             String jsonPayload = objectMapper.writeValueAsString(payload);
 
             // Build the PubsubMessage with the JSON payload

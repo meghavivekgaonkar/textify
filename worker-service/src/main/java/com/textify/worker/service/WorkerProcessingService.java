@@ -39,7 +39,7 @@ public class WorkerProcessingService {
      *
      * @param jobId The ID of the job to process.
      */
-    public void processJobWithRetry(String jobId) {
+    public void processJobWithRetry(String jobId, String userId, String originalGcsPath) {
         int retryCount = 0;
         long backoff = INITIAL_BACKOFF_MILLIS;
 
@@ -49,9 +49,9 @@ public class WorkerProcessingService {
                     .orElseThrow(() -> new RuntimeException("Job not found in DB: " + jobId));
 
                 // If the job is found, proceed with processing
-                logger.info("Processing job: {}", job.getId());
-                _doProcessJob(job, job.getOriginal_gcs_path());
-                logger.info("Successfully processed job: {}", job.getId());
+                logger.info("Processing job: {} for user{}", jobId, userId);
+                _doProcessJob(job, originalGcsPath, userId);
+                logger.info("Successfully processed job: {}", jobId);
                 return; // Exit the loop on success
             } catch (RuntimeException e) {
                 // The job was not found, so we'll retry.
@@ -76,7 +76,7 @@ public class WorkerProcessingService {
     }
 
     @Transactional
-    private void _doProcessJob(Job job, String originalGcsPath) {
+    private void _doProcessJob(Job job, String originalGcsPath, String userId) {
         String errorMessage = null;
         try {
             // 1. Update Status to PROCESSING

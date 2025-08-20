@@ -15,6 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.textify.me.dto.JobStatusResponse;
 import com.textify.me.dto.UploadResponse;
+import com.textify.me.exception.InvalidFileException;
+import com.textify.me.exception.JobNotFoundException;
 import com.textify.me.service.JobService;
 
 @RestController
@@ -27,27 +29,44 @@ public class JobController {
         this.jobService = jobService;
     }
 
+    /* used by frontend app */
     @PostMapping("/upload")
-    public ResponseEntity<UploadResponse> uploadFile(@RequestParam("file") MultipartFile file) {
-        UploadResponse response = jobService.initiateFileUpload(file);
+    public ResponseEntity<UploadResponse> uploadFile(@RequestParam("file") MultipartFile file, 
+    @RequestParam("userId") String userId) {
+        UploadResponse response = jobService.initiateFileUpload(file, userId);
         return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
     }
 
+    @GetMapping
+    public ResponseEntity<UploadResponse>  getJobStatusByUserId(@RequestParam("userId") String userId) {
+        UploadResponse response = jobService.getJobStatusByUserId(userId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+    /* additional api's for postman */
+
     @GetMapping("/{jobId}/status")
     public ResponseEntity<JobStatusResponse> getJobStatus(@PathVariable String jobId) {
-        // Delegate to JobService to fetch the job status
         JobStatusResponse response = jobService.getJobStatus(jobId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+    
     @GetMapping("/{jobId}/download")
     public ResponseEntity<Void> downloadProcessedFile(@PathVariable String jobId) {
-        // Delegate to JobService to get the GCS download URL
-        String downloadUrl = jobService.getDownloadUrl(jobId);
+       try {
+            // Delegate to JobService to get the GCS download URL
+            String downloadUrl = jobService.getDownloadUrl(jobId);
 
-        // Build the response with a 302 Found status and the Location header
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.LOCATION, downloadUrl);
-        return new ResponseEntity<>(headers, HttpStatus.FOUND);
+            // Build the response with a 302 Found status and the Location header
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.LOCATION, downloadUrl);
+            return new ResponseEntity<>(headers, HttpStatus.FOUND);
+        } catch (JobNotFoundException e) {
+            // Job ID does not exist, return a 404 Not Found status
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (InvalidFileException e) {
+            // Job is not yet completed or processed file is not available, return a 400 Bad Request
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
     @GetMapping("/recent")
     public ResponseEntity<List<JobStatusResponse>> getRecentJobs(

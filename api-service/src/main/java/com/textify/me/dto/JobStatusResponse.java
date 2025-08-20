@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class JobStatusResponse {
 
     private String jobId;
+    private String userId; 
     private String status;
     private String originalFilename;
     private String errorMessage; // Nullable

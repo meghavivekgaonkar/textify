@@ -1,8 +1,8 @@
 package com.textify.me.service;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -50,29 +50,25 @@ public class GCSService {
 			throw new RuntimeException("Failed to upload file to GCS: " + file.getOriginalFilename(), e);
 		}
 	}
-    public String getPublicDownloadUrl(String gcsBlobPath) {
-		// Parse the GCS path (e.g., "gs://your-bucket/path/to/file.txt")
-		if (!gcsBlobPath.startsWith("gs://")) {
-			throw new IllegalArgumentException("Invalid GCS path format: " + gcsBlobPath);
-		}
-		String pathWithoutPrefix = gcsBlobPath.substring("gs://".length());
-		int firstSlash = pathWithoutPrefix.indexOf('/');
-		if (firstSlash == -1) {
-			throw new IllegalArgumentException("Invalid GCS path format (no blob name): " + gcsBlobPath);
-		}
-		String bucketName = pathWithoutPrefix.substring(0, firstSlash);
-		String blobName = pathWithoutPrefix.substring(firstSlash + 1);
+   public String getPublicDownloadUrl(String gcsPath) {
+        // Parse the GCS path (e.g., "gs://your-bucket/path/to/file.txt")
+        if (!gcsPath.startsWith("gs://")) {
+            throw new IllegalArgumentException("Invalid GCS path format: " + gcsPath);
+        }
+        String pathWithoutPrefix = gcsPath.substring("gs://".length());
+        int firstSlash = pathWithoutPrefix.indexOf('/');
+        if (firstSlash == -1) {
+            throw new IllegalArgumentException("Invalid GCS path format (no blob name): " + gcsPath);
+        }
+        String bucketName = pathWithoutPrefix.substring(0, firstSlash);
+        String objectName = pathWithoutPrefix.substring(firstSlash + 1);
 
-		// Construct the public URL format for GCS
-		// Using "storage.googleapis.com" directly is for public objects
-		// For project-specific access, typically
-		// "https://storage.cloud.google.com/your-bucket/your-object"
-		// Ensure blobName is URL-encoded for special characters
-		try {
-			String encodedBlobName = URLEncoder.encode(blobName, StandardCharsets.UTF_8.toString()).replace("+", "%20");
-			return String.format("https://storage.googleapis.com/%s/%s", bucketName, encodedBlobName);
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to encode GCS blob name: " + blobName, e);
-		}
-	}
+        BlobInfo blobInfo = BlobInfo.newBuilder(bucketName, objectName).build();
+
+        // The signed URL will be valid for 15 minutes.
+        // You can adjust this duration as needed.
+        URL signedUrl = storage.signUrl(blobInfo, 15, TimeUnit.MINUTES, Storage.SignUrlOption.withV4Signature());
+
+        return signedUrl.toString();
+    }
 }

@@ -18,6 +18,9 @@ import lombok.NoArgsConstructor;
 public class Job {
 	@Id
 	String id;
+
+	@Column
+	String userId;
 	
 	@Column
 	String original_filename;

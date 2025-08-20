@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.textify.worker.model.Job;
-import com.textify.worker.model.JobOutbox;
+// import com.textify.worker.model.JobOutbox;
 import com.textify.worker.repository.JobOutboxRepository;
 import com.textify.worker.repository.JobRepository;
 
@@ -40,6 +40,7 @@ public class JobInitiatorService {
         // 2. Create and save a new message to the outbox table
         JobOutbox outboxMessage = new JobOutbox();
         outboxMessage.setJobId(savedJob.getId());
+        outboxMessage.setUserId(savedJob.getUserId()); 
         outboxMessage.setPayload("{\"jobId\":\"" + savedJob.getId() + "\"}");
         jobOutboxRepository.save(outboxMessage);
 

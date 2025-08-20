@@ -20,6 +20,8 @@ public class JobOutbox {
     @Id
     private String jobId;
 
+    private String userId;
+
     @Lob // Use @Lob for large text fields, such as JSON payloads
     private String payload;
 
