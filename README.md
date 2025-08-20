@@ -10,7 +10,7 @@ The project is divided into three main components:
 
 * **`worker-service`**: A Spring Boot application that subscribes to a Pub/Sub topic, processes jobs, and updates their status in Firestore.
 
-* **`textify-frontend`**: A React application that provides the user interface for uploading files and viewing job statuses in real-time.
+* **`frontend`**: A React application that provides the user interface for uploading files and viewing job statuses in real-time.
 
 ## API Service
 
@@ -53,7 +53,7 @@ The `worker-service` is an asynchronous microservice that handles the heavy lift
 3. Run the application using Maven: mvn spring-boot:run
 ## Frontend React App
 
-The `textify-frontend` provides a clean, responsive user interface for your application.
+The `frontend` provides a clean, responsive user interface for your application.
 
 * Users can upload files through a simple form.
 
@@ -65,7 +65,7 @@ The `textify-frontend` provides a clean, responsive user interface for your appl
 
 **Running the Frontend App**
 
-1. Navigate to the `textify-frontend` directory.
+1. Navigate to the `frontend` directory.
 
 2. Ensure you have Node.js and npm installed.
 
